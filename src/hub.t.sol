@@ -132,6 +132,6 @@ contract VotingTest is DSTest {
         assertEq(chief.deposits(hub.proxies(eli)), 100 ether);
         assertEq(chief.approvals(c1), 100 ether);
         (, , , uint for_,) = voting.getPoll(_id);
-        assertEq(for_, 200 ether);
+        assertEq(for_, 200 ether); // uses the amt eli had 1 block before the poll was created
     }
 }

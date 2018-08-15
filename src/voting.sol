@@ -34,11 +34,11 @@ contract Voting is DSThing {
         uint32 frozenAt;
         address[] voters;
         Multihash ipfsHash;
-        mapping(address => VoterStatus) statuses; 
+        mapping(address => VoterStatus) votes; 
     }
 
     event PollCreated(address src, uint end, uint frozenAt, uint id);
-    event WeighedIn(address src, uint id, bool yay, uint weight);
+    event Voted(address src, uint id, bool yay, uint weight);
     event UnSaid(address src, uint id, uint weight);
 
     constructor(DSToken _gov) { gov = _gov; }
@@ -73,7 +73,7 @@ contract Voting is DSThing {
     
     function getVoterStatus(uint _id, address _guy) public view returns (VoterStatus status, uint weight) {
         // status codes -> 0 := not voting, 1 := voting nay, 2 := voting yay
-        return (pollMap[_id].statuses[_guy], depositsAt(_guy, pollMap[_id].frozenAt));
+        return (pollMap[_id].votes[_guy], depositsAt(_guy, pollMap[_id].frozenAt));
     }
 
     // this gets us "top supporters" info on the frontend
@@ -89,14 +89,14 @@ contract Voting is DSThing {
             uint i = 0;
             uint resultLength = poll.voters.length - _offset > _limit ? _limit : poll.voters.length - _offset;
             address[]     memory _voters   = new address[](resultLength);
-            VoterStatus[] memory _statuses = new VoterStatus[](resultLength);
+            VoterStatus[] memory _votes = new VoterStatus[](resultLength);
             uint[]        memory _weights  = new uint[](resultLength);
             for (uint j = _offset; (j < poll.voters.length) && (i < _limit); j++) {
                 _voters[j]   = poll.voters[j];
-                _statuses[j] = poll.statuses[msg.sender];
+                _votes[j] = poll.votes[msg.sender];
                 _weights[j]  = depositsAt(_voters[j], poll.frozenAt); i++;
             }
-            return(_voters, _statuses, _weights);
+            return(_voters, _votes, _weights);
         }
     }
 
@@ -138,7 +138,7 @@ contract Voting is DSThing {
         require(weight > 0);
         subWeight(weight, msg.sender, pollMap[_id]);
         addWeight(weight, msg.sender, pollMap[_id], _yay);
-        emit WeighedIn(msg.sender, _id, _yay, weight);
+        emit Voted(msg.sender, _id, _yay, weight);
     }
              
     function unSay(uint _id) public {
@@ -188,15 +188,16 @@ contract Voting is DSThing {
     }
 
     function subWeight(uint _weight, address _guy, Poll storage poll) internal {
-        if (poll.statuses[_guy] == VoterStatus.Yay) poll.yays = sub(poll.yays, _weight);
-        if (poll.statuses[_guy] == VoterStatus.Nay) poll.nays = sub(poll.nays, _weight);
-        poll.statuses[_guy] = VoterStatus.Absent;
+        if (poll.votes[_guy] == VoterStatus.Absent) return;
+        if (poll.votes[_guy] == VoterStatus.Yay) poll.yays = sub(poll.yays, _weight);
+        else if (poll.votes[_guy] == VoterStatus.Nay) poll.nays = sub(poll.nays, _weight);
+        poll.votes[_guy] = VoterStatus.Absent;
     }
 
     function addWeight(uint _weight, address _guy, Poll storage poll, bool _yay) internal {
         if (_yay) poll.yays = add(poll.yays, _weight);
         else poll.nays = add(poll.nays, _weight);
-        poll.statuses[_guy] = _yay ? VoterStatus.Yay : VoterStatus.Nay;
+        poll.votes[_guy] = _yay ? VoterStatus.Yay : VoterStatus.Nay;
         poll.voters.push(_guy);
     }
 }

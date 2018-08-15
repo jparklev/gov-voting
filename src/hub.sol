@@ -9,7 +9,6 @@ import "./voting.sol";
 
 contract Hub is DSMath {
     DSToken public gov;
-    DSToken public iou;
     Voting public voting;
     DSChief public chief;
     mapping(address => address) public delegations;
@@ -22,7 +21,6 @@ contract Hub is DSMath {
         chief = _chief; 
         voting = _voting;
         gov = chief.GOV();
-        iou = chief.IOU();
     }
 
     event ProxyCreated(address src, address proxy);
