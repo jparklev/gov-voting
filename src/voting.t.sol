@@ -79,7 +79,7 @@ contract VotingTest is DSTest {
     function test_create_poll() public {
         dan.approve(100 ether);
         dan.lock(100 ether);
-        uint _id = voting.createPoll(1, digest, hashFunction, size);
+        uint _id = voting.createPoll(0, 1, digest, hashFunction, size);
         (, uint48 _end, , uint _votesFor, uint _votesAgainst) = voting.getPoll(_id);
         require(_end == 1 hours + 1 days);
         assertEq(_votesFor, 0 ether);
@@ -90,7 +90,7 @@ contract VotingTest is DSTest {
         dan.approve(100 ether);
         dan.lock(100 ether);
         voting.warp(2 hours, 2); 
-        uint _id = voting.createPoll(1, digest, hashFunction, size);
+        uint _id = voting.createPoll(0, 1, digest, hashFunction, size);
         // cast vote
         dan.vote(_id, true);
         (, , , uint _votesFor, uint _votesAgainst) = voting.getPoll(_id);
@@ -116,7 +116,7 @@ contract VotingTest is DSTest {
         eli.lock(50 ether);
         voting.warp(2 hours, 2); 
 
-        uint _id = voting.createPoll(1, digest, hashFunction, size);
+        uint _id = voting.createPoll(0, 1, digest, hashFunction, size);
         dan.vote(_id, true);
         eli.vote(_id, true);
         (, , , uint _votesFor, uint _votesAgainst) = voting.getPoll(_id);
@@ -130,7 +130,7 @@ contract VotingTest is DSTest {
         assertEq(votesFor_, 50 ether);
         assertEq(votesAgainst_, 25 ether);
 
-        uint id_ = voting.createPoll(2, digest, hashFunction, size);
+        uint id_ = voting.createPoll(0, 2, digest, hashFunction, size);
         dan.vote(id_, true);
         eli.vote(id_, true);
         (, , , uint _votesFor_, uint _votesAgainst_) = voting.getPoll(id_);
@@ -147,7 +147,7 @@ contract VotingTest is DSTest {
     function testFail_poll_expires_vote() public {
         dan.approve(100 ether);
         dan.lock(100 ether);
-        uint _id = voting.createPoll(1, digest, hashFunction, size);
+        uint _id = voting.createPoll(0, 1, digest, hashFunction, size);
         voting.warp(2 days, 2); 
         dan.vote(_id, true);
     }
@@ -155,7 +155,7 @@ contract VotingTest is DSTest {
     function testFail_poll_expires_withdraw() public {
         dan.approve(100 ether);
         dan.lock(100 ether);
-        uint _id = voting.createPoll(1, digest, hashFunction, size);
+        uint _id = voting.createPoll(0, 1, digest, hashFunction, size);
         voting.warp(2 days, 2); 
         dan.unSay(_id);
     }
@@ -164,7 +164,7 @@ contract VotingTest is DSTest {
         dan.approve(100 ether);
         dan.lock(100 ether);
         voting.warp(2 hours, 2); 
-        voting.createPoll(1, digest, hashFunction, size);
+        voting.createPoll(0, 1, digest, hashFunction, size);
         dan.vote(200, true);
     }
 
@@ -172,7 +172,7 @@ contract VotingTest is DSTest {
         dan.approve(100 ether);
         dan.lock(100 ether);
         voting.warp(2 hours, 2); 
-        voting.createPoll(1, digest, hashFunction, size);
+        voting.createPoll(0, 1, digest, hashFunction, size);
         dan.unSay(200);
     }
 }

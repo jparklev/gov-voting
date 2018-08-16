@@ -6,10 +6,10 @@ import "ds-thing/thing.sol";
 import "ds-token/token.sol";
 
 
-contract Voting is DSThing {
-    uint public polls;
+contract Voting is DSMath {
+    uint public id_;
     DSToken public gov; 
-    mapping(uint => Poll) public pollMap;    
+    mapping(uint => Poll) public polls;    
     mapping(address => Checkpoint[]) public deposits;
 
     // idea credit Aragon
@@ -37,7 +37,7 @@ contract Voting is DSThing {
         mapping(address => VoterStatus) votes; 
     }
 
-    event PollCreated(address src, uint end, uint frozenAt, uint id);
+    event PollCreated(address src, uint48 start, uint48 end, uint32 frozenAt, uint id);
     event Voted(address src, uint id, bool yay, uint weight);
     event UnSaid(address src, uint id, uint weight);
 
@@ -57,23 +57,27 @@ contract Voting is DSThing {
     }
 
     function pollExists(uint _id) public view returns (bool) {
-        return (_id != 0 && _id <= polls);
+        return (_id != 0 && _id <= id_);
+    }
+
+    function pollIsActive(uint _id) public view returns (bool) {
+        return (era() >= polls[_id].start && era() < polls[_id].end);
     }
 
     function getPoll(uint _id) public view returns (uint48, uint48, uint32, uint, uint) {
         require(pollExists(_id));
         return (
-            pollMap[_id].start, 
-            pollMap[_id].end, 
-            pollMap[_id].frozenAt, 
-            pollMap[_id].yays, 
-            pollMap[_id].nays
+            polls[_id].start, 
+            polls[_id].end, 
+            polls[_id].frozenAt, 
+            polls[_id].yays, 
+            polls[_id].nays
         );
     }
     
     function getVoterStatus(uint _id, address _guy) public view returns (VoterStatus status, uint weight) {
         // status codes -> 0 := not voting, 1 := voting nay, 2 := voting yay
-        return (pollMap[_id].votes[_guy], depositsAt(_guy, pollMap[_id].frozenAt));
+        return (polls[_id].votes[_guy], depositsAt(_guy, polls[_id].frozenAt));
     }
 
     // this gets us "top supporters" info on the frontend
@@ -84,7 +88,7 @@ contract Voting is DSThing {
         uint _offset, 
         uint _limit
     ) public view returns (address[], VoterStatus[], uint[]) {
-        Poll storage poll = pollMap[_id];
+        Poll storage poll = polls[_id];
         if (_offset < poll.voters.length) {
             uint i = 0;
             uint resultLength = poll.voters.length - _offset > _limit ? _limit : poll.voters.length - _offset;
@@ -103,23 +107,26 @@ contract Voting is DSThing {
     function getMultiHash(uint _id) public view returns (bytes32, uint8, uint8) {
         require(pollExists(_id));
         return (
-            pollMap[_id].ipfsHash.digest, 
-            pollMap[_id].ipfsHash.hashFunction, 
-            pollMap[_id].ipfsHash.size
+            polls[_id].ipfsHash.digest, 
+            polls[_id].ipfsHash.hashFunction, 
+            polls[_id].ipfsHash.size
         );
     }
 
     function createPoll(
-        uint32 _days,
+        uint32 _tillStart,
+        uint32 _tillEnd,
         bytes32 _digest, 
         uint8 _hashFunction, 
         uint8 _size
-    ) public auth returns (uint) {
-        uint id = ++polls;
-        uint48 _end = uint48(add(era(), mul(_days, 1 days)));
+    ) public returns (uint) {
+        require(_tillStart < _tillEnd);
+        uint id = ++id_;
+        uint48 _start = uint48(add(era(), mul(_tillStart, 1 days)));
+        uint48 _end = uint48(add(era(), mul(_tillEnd, 1 days)));
         uint32 _frozenAt = age() - 1;
-        pollMap[id] = Poll({
-            start: era(),
+        polls[id] = Poll({
+            start: _start,
             end: _end,
             yays: 0,
             nays: 0,
@@ -127,26 +134,26 @@ contract Voting is DSThing {
             frozenAt: _frozenAt,
             ipfsHash: Multihash(_digest, _hashFunction, _size)
         });
-        emit PollCreated(msg.sender, _end, _frozenAt, id);
+        emit PollCreated(msg.sender, _start, _end, _frozenAt, id);
         return id;
     }
     
     function vote(uint _id, bool _yay) public {
         require(pollExists(_id));
-        require(era() < pollMap[_id].end);
-        uint weight = depositsAt(msg.sender, pollMap[_id].frozenAt);
+        require(pollIsActive(_id));
+        uint weight = depositsAt(msg.sender, polls[_id].frozenAt);
         require(weight > 0);
-        subWeight(weight, msg.sender, pollMap[_id]);
-        addWeight(weight, msg.sender, pollMap[_id], _yay);
+        subWeight(weight, msg.sender, polls[_id]);
+        addWeight(weight, msg.sender, polls[_id], _yay);
         emit Voted(msg.sender, _id, _yay, weight);
     }
              
     function unSay(uint _id) public {
         require(pollExists(_id));
-        require(era() < pollMap[_id].end);
-        uint weight = depositsAt(msg.sender, pollMap[_id].frozenAt);
+        require(pollIsActive(_id));
+        uint weight = depositsAt(msg.sender, polls[_id].frozenAt);
         require(weight > 0);
-        subWeight(weight, msg.sender, pollMap[_id]);
+        subWeight(weight, msg.sender, polls[_id]);
         emit UnSaid(msg.sender, _id, weight);
     }
 
