@@ -76,7 +76,7 @@ contract Voting is DSMath {
     }
     
     function getVoterStatus(uint _id, address _guy) public view returns (VoterStatus status, uint weight) {
-        // status codes -> 0 := not voting, 1 := voting nay, 2 := voting yay
+        // status codes -> 0 := not voting, 1 := voting yay, 2 := voting nay
         return (polls[_id].votes[_guy], depositsAt(_guy, polls[_id].frozenAt));
     }
 
