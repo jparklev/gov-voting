@@ -152,7 +152,7 @@ contract VotingTest is DSTest {
         dan.vote(_id, true);
     }
 
-    function testFail_poll_expires_withdraw() public {
+    function testFail_poll_expires_unsay() public {
         dan.approve(100 ether);
         dan.lock(100 ether);
         uint _id = voting.createPoll(0, 1, digest, hashFunction, size);
@@ -175,4 +175,22 @@ contract VotingTest is DSTest {
         voting.createPoll(0, 1, digest, hashFunction, size);
         dan.unSay(200);
     }
+
+    function testFail_free_too_much() public {
+        dan.approve(100 ether);
+        eli.approve(100 ether);
+        dan.lock(50 ether);
+        eli.lock(50 ether);
+        dan.free(51 ether);
+    }
+
+    function testFail_free_too_much_warp() public {
+        dan.approve(100 ether);
+        eli.approve(100 ether);
+        dan.lock(50 ether);
+        eli.lock(50 ether);
+        voting.warp(100 days, 1000); 
+        dan.free(51 ether);
+    }
 }
+
