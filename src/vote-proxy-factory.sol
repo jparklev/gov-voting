@@ -1,9 +1,10 @@
-// Guy - create and keep records of proxy ids
+// VoteProxyFactory - create and keep records of proxy identities
 
 pragma solidity ^0.4.24;
 
 import "./vote-proxy.sol";
 import "./polling.sol";
+
 
 contract VoteProxyFactory {
     DSChief public chief;

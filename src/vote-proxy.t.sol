@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "ds-test/test.sol";
 import "ds-token/token.sol";
@@ -6,6 +6,7 @@ import "ds-chief/chief.sol";
 
 import "./vote-proxy.sol";
 import "./polling.sol";
+
 
 contract Voter {
     DSToken gov;
@@ -62,6 +63,7 @@ contract Voter {
     }
 }
 
+
 contract WarpPolling is Polling {
     uint48 _era; uint32 _age;
     function warp(uint48 era_, uint32 age_) public { _era = era_; _age = age_; }
@@ -69,6 +71,7 @@ contract WarpPolling is Polling {
     function age() public view returns (uint32) { return _age; }       
     constructor(DSToken _gov) public Polling(_gov) {}
 }
+
 
 contract VoteProxyTest is DSTest {
     uint256 constant electionSize = 3;

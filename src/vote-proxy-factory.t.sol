@@ -1,14 +1,15 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "ds-test/test.sol";
 import "./polling.sol";
 import "./vote-proxy-factory.sol";
 
+
 contract VoteUser {
     DSChief chief;
     VoteProxyFactory voteProxyFactory;
 
-    function VoteUser(VoteProxyFactory voteProxyFactory_) public {
+    constructor(VoteProxyFactory voteProxyFactory_) public {
         voteProxyFactory = voteProxyFactory_;
     }
 
@@ -32,6 +33,7 @@ contract VoteUser {
         token.transfer(to, amount);
     }
 }
+
 
 contract VoteProxyFactoryTest is DSTest {
     uint256 constant electionSize = 3;

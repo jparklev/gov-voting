@@ -1,10 +1,11 @@
-// Guy - vote w/ a proxy identity
+// VoteProxy - vote w/ a proxy identity
 
 pragma solidity ^0.4.24;
 
 import "ds-token/token.sol";
 import "ds-chief/chief.sol";
 import "./polling.sol";
+
 
 contract VoteProxy {
     address public cold;

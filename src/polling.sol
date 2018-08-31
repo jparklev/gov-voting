@@ -1,9 +1,10 @@
-// Voting – create expiring straw polls 
+// Polling – create expiring straw polls 
 
 pragma solidity ^0.4.24;
 
 import "ds-math/math.sol";
 import "ds-token/token.sol";
+
 
 contract Polling is DSMath {
     uint256 public npoll;
